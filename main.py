@@ -156,7 +156,7 @@ def shutdown_hook():
 
 def init_logging():
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.WARNING)
 
     handler = logging.StreamHandler(sys.stdout)
     logger.addHandler(handler)
