@@ -80,4 +80,4 @@ export EPAPER_TYPE=waveshare-2.7
 #export EPAPER_GPIO_PIN_FOR_KEY3=13
 #export EPAPER_GPIO_PIN_FOR_KEY4=19
 
-python main.py
+python3 main.py
