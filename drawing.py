@@ -8,6 +8,8 @@ import textwrap
 
 from resources import icons
 
+from datetime import datetime
+
 
 class Drawing(object):
 
@@ -61,34 +63,31 @@ class Drawing(object):
 
     def draw_weather_icon(self, buf, fn_icon, pos):
         img_icon = Image.open("./resources/icons/" + fn_icon)
-        buf.paste(img_icon, pos)
+        buf.paste(0, pos, img_icon.convert("1"))
 
 
-    def draw_weather(self, buf, red_buf, weather, airly, prefer_airly_local_temp):
-        start_pos = (0, 200)
-    
-        back = Image.open('./resources/images/back.bmp')
-        buf.paste(back, start_pos)
+    def draw_weather(self, buf, red_buf, weather, airly, prefer_airly_local_temp, start_pos=(0,200)):
 
         icon = icons.darksky.get(weather.icon, None)
+        draw = ImageDraw.Draw(buf)
+        red_draw = ImageDraw.Draw(red_buf)
         if icon is not None:
             self.draw_weather_icon(
                 buf,
                 icon,
-                [start_pos[0] + 15, start_pos[1] + 15]
+                [start_pos[0] + 5, start_pos[1] + 25]
             )
 
-        draw = ImageDraw.Draw(buf)
-        red_draw = ImageDraw.Draw(red_buf)
 
-        top_y = start_pos[1] - 6
+        top_y = start_pos[1] + 14
 
         current_temp = weather.temp
         if prefer_airly_local_temp and airly.temperature is not None:
             current_temp = airly.temperature
 
-        caption = "{:0.0f}{}".format(current_temp, self.TEMPERATURE_SYMBOL.encode('utf-8'))
-        self.draw_text(85, top_y, caption, 90, draw, 255)
+        degrees = self.TEMPERATURE_SYMBOL
+        caption = "{:+3.0f}{}".format(weather.apparent_temp, degrees)
+        self.draw_text(85, top_y, caption, 72, draw, 0)
 
         storm_distance_warning = self.storm_distance_warn
 
@@ -97,18 +96,18 @@ class Drawing(object):
             caption = "[!] {}".format(weather.alert_title.lower().encode('utf-8'))
             draw.rectangle((215, top_y + 5, self.CANVAS_WIDTH - 10, top_y + 95), 255, 255)
             red_draw.rectangle((215, top_y + 5, self.CANVAS_WIDTH - 10, top_y + 95), 0, 0)
-            self.draw_multiline_text(220, top_y, caption, 23, red_draw, 255)
+            self.draw_multiline_text(220, top_y, caption, 23, red_draw, 0)
         elif weather.nearest_storm_distance is not None and weather.nearest_storm_distance <= storm_distance_warning:
             top_y = top_y + 3
             caption = "Storm @ {}{}".format(weather.nearest_storm_distance, self.distance_symbol)
             draw.rectangle((215, top_y + 5, self.CANVAS_WIDTH - 10, top_y + 95), 255, 255)
             red_draw.rectangle((215, top_y + 5, self.CANVAS_WIDTH - 10, top_y + 95), 0, 0)
             top_y = top_y + 7
-            self.draw_multiline_text(230, top_y, caption, 40, red_draw, 255)
+            self.draw_multiline_text(230, top_y, caption, 40, red_draw, 0)
         else:
-            top_y = top_y + 17
-            caption = "{:0.0f}{} {:0.0f}{}".format(weather.temp_min, self.TEMPERATURE_SYMBOL.encode('utf-8'), weather.temp_max, self.TEMPERATURE_SYMBOL.encode('utf-8'))
-            self.draw_text(205, top_y, caption, 60, draw, 255)
+            top_y = top_y + 15
+            caption = "{:+3.0f}{} {:+3.0f}{} {:2}".format(weather.temp_min, degrees, weather.temp_max, degrees, weather.beaufort)
+            self.draw_text(180, top_y, caption, 52, draw, 0)
 
 
     def draw_clock(self, img_buf, formatted_time, use_hrs_mins_separator):
@@ -133,7 +132,7 @@ class Drawing(object):
         font_dims = font.getsize(text)
 
         # lower font size to accommodate huge polution levels
-        if font_dims[0] > 100:
+        if font_dims[0] > 264:
             font = self.load_font(int(text_size * 2 / 3))
             draw.text((x, y + 15), text, font=font, fill=0)
         else:
@@ -157,16 +156,13 @@ class Drawing(object):
 
 
     def draw_airly(self, black_buf, red_buf, airly):
-        start_pos = (0, 100)
-        buf = black_buf if airly.aqi < self.aqi_warn_level else red_buf
-
-        back = Image.open('./resources/images/back_aqi.bmp')
-        buf.paste(back, start_pos)
+        start_pos = (0, 130)
+        buf = black_buf if airly.pm10 < self.aqi_warn_level else red_buf
 
         draw = ImageDraw.Draw(buf)
 
-        caption = "%3i" % int(round(airly.aqi))
-        self.draw_text_aqi(start_pos[0] + 25, start_pos[1] - 5, caption, 90, draw)
+        caption = "{:3.0f} {:3.0f} {:3.0f}% {:3.0f}".format(airly.pm25, airly.pm10, airly.humidity, airly.pressure / 100)
+        self.draw_text_aqi(start_pos[0] + 5, start_pos[1] - 5, caption, 88, draw)
 
 
     def draw_eta(self, idx, black_buf, red_buf, gmaps, warn_above_percent):
@@ -268,21 +264,30 @@ class Drawing(object):
 
         return black_buf, red_buf
 
+    
+    def draw_events(self, black_buf, red_buf, events):
+        top_y = 5
+        for event in events[:2]:
+            is_today = event.start.date() == datetime.today()
+            draw = ImageDraw.Draw(red_buf) if is_today else ImageDraw.Draw(black_buf)
+            caption = '{}: {}'.format(event.start.strftime('%d %a'), event.summary)
+            self.draw_text(5, top_y, caption, 52, draw)
+            top_y += 50
 
-    def draw_frame(self, is_mono, formatted_time, use_hrs_mins_separator, weather, prefer_airly_local_temp, airly, gmaps1, gmaps2):
+
+    def draw_frame(self, is_mono, events, use_hrs_mins_separator, weather, prefer_airly_local_temp, airly):
         black_buf = Image.new('1', (self.CANVAS_WIDTH, self.CANVAS_HEIGHT), 1)
 
         # for mono display we simply use black buffer so all the painting will be done in black
         red_buf = black_buf if (is_mono) else Image.new('1', (self.CANVAS_WIDTH, self.CANVAS_HEIGHT), 1)
 
-        # draw clock into buffer
-        self.draw_clock(black_buf, formatted_time, use_hrs_mins_separator)
+        self.draw_events(black_buf, red_buf, events)
 
         # draw time to dest into buffer
-        self.draw_eta(0, black_buf, red_buf, gmaps1, self.primary_time_warn_above)
+        # self.draw_eta(0, black_buf, red_buf, gmaps1, self.primary_time_warn_above)
 
         # draw time to dest into buffer
-        self.draw_eta(1, black_buf, red_buf, gmaps2, self.secondary_time_warn_above)
+        # self.draw_eta(1, black_buf, red_buf, gmaps2, self.secondary_time_warn_above)
 
         # draw AQI into buffer
         self.draw_airly(black_buf, red_buf, airly)

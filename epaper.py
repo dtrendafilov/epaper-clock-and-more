@@ -9,7 +9,7 @@ from PIL import Image
 from drawing import Drawing
 from providers.luftdaten import Luftdaten
 from providers.weather import Weather
-from providers.gmaps import GMaps
+from providers.ical import ICal
 from providers.system_info import SystemInfo
 
 
@@ -64,27 +64,9 @@ class EPaper(object):
         os.environ.get("DARKSKY_UNITS", "si"),
         int(os.environ.get("DARKSKY_TTL", "15"))
     )
-    gmaps1 = GMaps(
-        os.environ.get("GOOGLE_MAPS_KEY"),
-        os.environ.get("LAT"),
-        os.environ.get("LON"),
-        os.environ.get("FIRST_TIME_TO_DESTINATION_LAT"),
-        os.environ.get("FIRST_TIME_TO_DESTINATION_LON"),
-        os.environ.get("GOOGLE_MAPS_UNITS", "metric"),
-        "primary",
-        int(os.environ.get("GOOGLE_MAPS_TTL", "10"))
-    )
-    gmaps2 = GMaps(
-        os.environ.get("GOOGLE_MAPS_KEY"),
-        os.environ.get("LAT"),
-        os.environ.get("LON"),
-        os.environ.get("SECOND_TIME_TO_DESTINATION_LAT"),
-        os.environ.get("SECOND_TIME_TO_DESTINATION_LON"),
-        os.environ.get("GOOGLE_MAPS_UNITS", "metric"),
-        "secondary",
-        int(os.environ.get("GOOGLE_MAPS_TTL", "10"))
-    )
     system_info = SystemInfo()
+
+    events = ICal(os.environ.get("EVENTS_ICAL_URL"))
 
 
     def __init__(self, debug_mode = False):
@@ -152,8 +134,9 @@ class EPaper(object):
 
 
     def display_gmaps_details(self):
-        black_frame, red_frame = self.drawing.draw_gmaps_details(self.gmaps1.get(), self.gmaps2.get())
-        self.display_buffer(black_frame, red_frame, 'gmaps')
+        return
+        # black_frame, red_frame = self.drawing.draw_gmaps_details(self.gmaps1.get(), self.gmaps2.get())
+        # self.display_buffer(black_frame, red_frame, 'gmaps')
 
 
     def display_weather_details(self):
@@ -184,21 +167,15 @@ class EPaper(object):
             airly_data = self.airly.get()
             logging.info("--- airly: " + json.dumps(airly_data))
 
-            gmaps1_data = self.gmaps1.get()
-            logging.info("--- gmaps1: " + json.dumps(gmaps1_data))
-
-            gmaps2_data = self.gmaps2.get()
-            logging.info("--- gmaps2: " + json.dumps(gmaps2_data))
+            events_data = self.events.get()
 
             black_frame, red_frame = self.drawing.draw_frame(
                 self.MONO_DISPLAY,
-                formatted,
+                events_data,
                 self.CLOCK_HOURS_MINS_SEPARATOR,
                 weather_data,
                 self.PREFER_AIRLY_LOCAL_TEMP,
-                airly_data,
-                gmaps1_data,
-                gmaps2_data
+                airly_data
             )
             self.display_buffer(black_frame, red_frame, dt)
 
