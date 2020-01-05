@@ -7,7 +7,7 @@ import os
 from PIL import Image
 
 from drawing import Drawing
-from providers.airly import Airly
+from providers.luftdaten import Luftdaten
 from providers.weather import Weather
 from providers.gmaps import GMaps
 from providers.system_info import SystemInfo
@@ -52,8 +52,7 @@ class EPaper(object):
         int(os.environ.get("SECONDARY_TIME_WARN_ABOVE_PERCENT", "50"))
     )
 
-    airly = Airly(
-        os.environ.get("AIRLY_KEY"),
+    airly = Luftdaten(
         os.environ.get("LAT"),
         os.environ.get("LON"),
         int(os.environ.get("AIRLY_TTL", "20"))
