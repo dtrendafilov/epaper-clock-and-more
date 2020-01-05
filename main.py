@@ -100,14 +100,14 @@ def main():
             logging.info("Going to refresh the main screen...")
             refresh_main_screen(epaper)
 
-        for i in range(120 if buttons is not None else 1):  # lower the CPU usage when no buttons handled
+        for i in range(300 if buttons is not None else 1):  # lower the CPU usage when no buttons handled
             if shutting_down:
                 logging.info("App is shutting down...")
                 break
             if details_to_display is not None:
                 logging.info("Got button pressed!")
                 break
-            time.sleep(0.5 if buttons is not None else 60)
+            time.sleep(1 if buttons is not None else 300)
 
 
 def action_button(key, epaper):
