@@ -4,7 +4,7 @@ from icalevents.icalevents import events
 from collections import namedtuple
 
 
-EventData = namedtuple('EventData', ['summary', 'start'])
+EventData = namedtuple('EventData', ['start', 'summary'])
 
 
 def get_event(event):
@@ -21,6 +21,7 @@ class ICal:
         if self.events is None or self.should_update():
             end = datetime.today() + relativedelta(months=1)
             self.events = [get_event(e) for e in events(self.url, end=end)]
+            self.events.sort()
         return self.events
 
 
