@@ -268,7 +268,7 @@ class Drawing(object):
     def draw_events(self, black_buf, red_buf, events):
         top_y = 5
         for event in events[:2]:
-            is_today = event.start.date() == datetime.today()
+            is_today = event.start.date() == datetime.today().date()
             draw = ImageDraw.Draw(red_buf) if is_today else ImageDraw.Draw(black_buf)
             caption = '{}: {}'.format(event.start.strftime('%d %a'), event.summary)
             self.draw_text(5, top_y, caption, 52, draw)
