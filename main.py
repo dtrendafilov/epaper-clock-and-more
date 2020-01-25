@@ -113,11 +113,11 @@ def main():
 def action_button(key, epaper):
     global details_to_display
     if key == 1:
-        details_to_display = lambda: epaper.display_gmaps_details()
+        details_to_display = lambda: epaper.display_weather_details()
     elif key == 2:
         details_to_display = lambda: epaper.display_airly_details()
     elif key == 3:
-        details_to_display = lambda: epaper.display_weather_details()
+        details_to_display = lambda: epaper.display_weather_forecast()
     elif key == 4:
         details_to_display = lambda: epaper.display_system_details()
     else:

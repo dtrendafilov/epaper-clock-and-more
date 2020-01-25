@@ -11,7 +11,7 @@ from collections import namedtuple
 
 WeatherTuple = namedtuple('Weather', ['temp', 'temp_min', 'temp_max', 'icon',
     'summary', 'forecast_summary', 'nearest_storm_distance', 'alert_title',
-    'alert_description', 'wind_speed', 'wind_gust', 'apparent_temp', 'beaufort'])
+    'alert_description', 'wind_speed', 'wind_gust', 'apparent_temp', 'beaufort', 'forecast'])
 
 
 BEAUFORT_SCALE = (
@@ -38,7 +38,7 @@ class Weather(Acquire):
 
     DEFAULT = WeatherTuple(temp=-99, temp_min=-99, temp_max=-99, icon='n/a', summary='n/a',
                            forecast_summary='n/a', nearest_storm_distance=None, alert_title=None, alert_description=None,
-                           wind_speed=-1, wind_gust=-1, apparent_temp=-1, beaufort=-1)
+                           wind_speed=-1, wind_gust=-1, apparent_temp=-1, beaufort=-1, forecast=[])
 
 
     def __init__(self, key, lat, lon, units, cache_ttl):
@@ -84,32 +84,67 @@ class Weather(Acquire):
             forecast_data = self.load()
             if forecast_data is None:
                 return self.DEFAULT
-        
-            d = forecast_data['daily']['data'][0]
 
-            temp_min = d['temperatureMin']
-            temp_max = d['temperatureMax']
-
-            c = forecast_data['currently']
-            a = forecast_data.get('alerts', None)
-
-            return WeatherTuple(
-                temp=c['temperature'],
-                temp_min=temp_min,
-                temp_max=temp_max,
-                icon=d['icon'],
-                summary=c['summary'],
-                forecast_summary=forecast_data['daily']['summary'],
-                nearest_storm_distance=c.get('nearestStormDistance', None),
-                alert_title=a[0]['title'] if a is not None else None,
-                alert_description=a[0]['description'] if a is not None else None,
-                wind_speed=c['windSpeed'],
-                wind_gust=c['windGust'],
-                apparent_temp=c['apparentTemperature'],
-                beaufort=beaufort_scale(c['windSpeed'], c['windGust']),
-            )
-
+            return self.compute_data(forecast_data)
         except Exception as e:
             logging.exception(e)
             return self.DEFAULT
+
+    def forecast_day(self, day):
+        return WeatherTuple(
+            temp_min=day['temperatureMin'],
+            temp_max=day['temperatureMax'],
+            icon=day['icon'],
+            summary=day['summary'],
+            wind_speed=day['windSpeed'],
+            wind_gust=day['windGust'],
+            beaufort=beaufort_scale(day['windSpeed'], day['windGust']),
+            temp=None,
+            forecast_summary=None,
+            nearest_storm_distance=None,
+            alert_title=None,
+            alert_description=None,
+            apparent_temp=None,
+            forecast = None,
+        )
+
+
+
+    def compute_data(self, forecast_data):
+        days = forecast_data['daily']['data']
+        d = days[0]
+
+        temp_min = d['temperatureMin']
+        temp_max = d['temperatureMax']
+
+        c = forecast_data['currently']
+        a = forecast_data.get('alerts', None)
+
+        forecast = [ self.forecast_day(d) for d in days[1:4] ]
+
+        return WeatherTuple(
+            temp=c['temperature'],
+            temp_min=temp_min,
+            temp_max=temp_max,
+            icon=d['icon'],
+            summary=c['summary'],
+            forecast_summary=forecast_data['daily']['summary'],
+            nearest_storm_distance=c.get('nearestStormDistance', None),
+            alert_title=a[0]['title'] if a is not None else None,
+            alert_description=a[0]['description'] if a is not None else None,
+            wind_speed=c['windSpeed'],
+            wind_gust=c['windGust'],
+            apparent_temp=c['apparentTemperature'],
+            beaufort=beaufort_scale(c['windSpeed'], c['windGust']),
+            forecast = forecast,
+        )
+
+
+if __name__ == '__main__':
+    import sys
+    import json
+    with open(sys.argv[1]) as f:
+        data = json.load(f)
+    weather = Weather(None, None, None, None, None)
+    print(json.dumps(weather.compute_data(data), indent=4))
 

@@ -205,20 +205,33 @@ class Drawing(object):
         return black_buf, red_buf
 
 
-    def draw_gmaps_details(self, gmaps1, gmaps2):
+    def draw_weather_forecast(self, weather):
         black_buf = Image.new('1', (self.CANVAS_WIDTH, self.CANVAS_HEIGHT), 1)
         red_buf = Image.new('1', (self.CANVAS_WIDTH, self.CANVAS_HEIGHT), 1)
         draw = ImageDraw.Draw(black_buf)
-        self.draw_text(10, 10, "Traffic info by Google", 35, draw)
 
-        y = self.draw_multiline_text(10, 50, "From: {}".format(self.trim_address(gmaps1.origin_address).encode('utf-8')), 25, draw)
-        y += 5
-        y = self.draw_multiline_text(10, y, "To #1: {}".format(self.trim_address(gmaps1.destination_address).encode('utf-8')), 25, draw)
-        y = self.draw_text(10, y, "{}, avg: {}m, now: {}m".format(gmaps1.distance, gmaps1.time_to_dest / 60, gmaps1.time_to_dest_in_traffic / 60), 30, draw)
+        x = 10
+        y = 40
+        font_size = 30
+        y = self.draw_text(x, y, 'Min:', font_size, draw)
+        y = self.draw_text(x, y, 'Max:', font_size, draw)
+        y = self.draw_text(x, y, 'Wind:', font_size, draw)
 
-        y += 5
-        y = self.draw_multiline_text(10, y, "To #2: {}".format(self.trim_address(gmaps2.destination_address).encode('utf-8')), 25, draw)
-        self.draw_text(10, y, "{}, avg: {}m, now: {}m".format(gmaps2.distance, gmaps2.time_to_dest / 60, gmaps2.time_to_dest_in_traffic / 60), 30, draw)
+        for day in weather.forecast:
+            x += 85
+            y = 45
+            icon = icons.darksky.get(day.icon, None)
+            if icon is not None:
+                img_icon = Image.open("./resources/icons/" + icon)
+                img_icon = img_icon.resize((40, 40), Image.LANCZOS)
+                black_buf.paste(0, [x, 10], img_icon.convert("1"))
+            y = self.draw_text(x, y, "{:+3.0f}{}".format(day.temp_min, self.TEMPERATURE_SYMBOL), font_size, draw)
+            y = self.draw_text(x, y, "{:+3.0f}{}".format(day.temp_max, self.TEMPERATURE_SYMBOL), font_size, draw)
+            y = self.draw_text(x, y, "{:+4.0f}".format(day.beaufort), font_size, draw)
+
+        y += 10
+        for day in weather.forecast:
+            y = self.draw_multiline_text(10, y, day.summary, font_size - 5, draw)
 
         return black_buf, red_buf
 

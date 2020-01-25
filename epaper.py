@@ -133,10 +133,9 @@ class EPaper(object):
         self.display_buffer(black_frame, red_frame, 'airly')
 
 
-    def display_gmaps_details(self):
-        return
-        # black_frame, red_frame = self.drawing.draw_gmaps_details(self.gmaps1.get(), self.gmaps2.get())
-        # self.display_buffer(black_frame, red_frame, 'gmaps')
+    def display_weather_forecast(self):
+        black_frame, red_frame = self.drawing.draw_weather_forecast(self.weather.get())
+        self.display_buffer(black_frame, red_frame, 'forecast')
 
 
     def display_weather_details(self):
