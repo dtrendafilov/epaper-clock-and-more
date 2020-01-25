@@ -250,15 +250,16 @@ class Drawing(object):
         draw = ImageDraw.Draw(black_buf)
         self.draw_text(10, 10, "Weather by DarkSky.net", 35, draw)
 
-        self.draw_text(10, 65, "Temperature: {}{}".format(weather.temp, self.TEMPERATURE_SYMBOL.encode('utf-8')), 30, draw)
-        self.draw_text(10, 95, "Daily min: {}{}, max: {}{}".format(weather.temp_min, self.TEMPERATURE_SYMBOL.encode('utf-8'), weather.temp_max, self.TEMPERATURE_SYMBOL.encode('utf-8')), 30, draw)
-        y = self.draw_multiline_text(10, 145, "Daily summary: {}".format(weather.summary.encode('utf-8')), 25, draw)
+        self.draw_text(10, 65, "Temperature: {}{}".format(weather.temp, self.TEMPERATURE_SYMBOL), 30, draw)
+        self.draw_text(10, 95, "Daily min: {}{}, max: {}{}".format(weather.temp_min, self.TEMPERATURE_SYMBOL, weather.temp_max, self.TEMPERATURE_SYMBOL), 30, draw)
+        y = self.draw_multiline_text(10, 145, "Today: {}".format(weather.summary), 25, draw)
+        y = self.draw_text(10, y, "Wind: {} - {} Gusts: {} ms ".format(weather.beaufort, weather.wind_speed, weather.wind_gust), 25, draw)
     
         caption = None
         if weather.alert_description is not None:
-            caption = "Alert: {}".format(weather.alert_description.encode('utf-8'))
+            caption = "Alert: {}".format(weather.alert_description)
         else:
-            caption = "Forecast: {}".format(weather.forecast_summary.encode('utf-8'))
+            caption = "Forecast: {}".format(weather.forecast_summary)
         self.draw_multiline_text(10, y, caption, 25, draw)
 
         return black_buf, red_buf
