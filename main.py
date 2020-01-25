@@ -130,8 +130,9 @@ def refresh_main_screen(epaper, force = False):
     if DEBUG_MODE:
         epaper.display_weather_details()
         epaper.display_airly_details()
-        epaper.display_gmaps_details()
+        epaper.display_weather_forecast()
         epaper.display_system_details()
+        shutdown_hook()
 
 
 def signal_hook(*args):
