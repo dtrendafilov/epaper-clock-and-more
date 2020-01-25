@@ -193,14 +193,14 @@ class Drawing(object):
         black_buf = Image.new('1', (self.CANVAS_WIDTH, self.CANVAS_HEIGHT), 1)
         red_buf = Image.new('1', (self.CANVAS_WIDTH, self.CANVAS_HEIGHT), 1)
         draw = ImageDraw.Draw(black_buf)
-        self.draw_text(10, 10, "Air Quality Index by Airly.eu", 35, draw)
+        self.draw_text(10, 10, "Air Quality Luftdaten Project ", 25, draw)
 
-        y = self.draw_text(10, 60, "PM2.5: {:0.0f}, PM10: {:0.0f} ({})".format(airly.pm25, airly.pm10, self.PM_SYMBOL.encode('utf-8')), 30, draw)
-        y = self.draw_text(10, y, "AQI: {:0.0f}, level: {}".format(airly.aqi, airly.level.replace('_', ' ').encode('utf-8')), 30, draw)
-        y = self.draw_multiline_text(10, y, "Advice: {}".format(airly.advice.encode('utf-8')), 25, draw)
-        y = self.draw_text(10, y, "Hummidity: {} %".format(airly.hummidity), 30, draw)
+        y = self.draw_text(10, 60, "PM2.5: {:0.0f}, PM10: {:0.0f} ({})".format(airly.pm25, airly.pm10, self.PM_SYMBOL), 30, draw)
+        # y = self.draw_text(10, y, "AQI: {:0.0f}, level: {}".format(airly.aqi, airly.level.replace('_', ' ').encode('utf-8')), 30, draw)
+        # y = self.draw_multiline_text(10, y, "Advice: {}".format(airly.advice), 25, draw)
+        y = self.draw_text(10, y, "Hummidity: {} %".format(airly.humidity), 30, draw)
         y = self.draw_text(10, y, "Pressure:  {} hPa".format(airly.pressure), 30, draw)
-        y = self.draw_text(10, y, "Temperature: {} {}C".format(airly.temperature, self.TEMPERATURE_SYMBOL.encode('utf-8')), 30, draw)
+        y = self.draw_text(10, y, "Temperature: {} {}C".format(airly.temperature, self.TEMPERATURE_SYMBOL), 30, draw)
 
         return black_buf, red_buf
 
